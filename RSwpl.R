@@ -33,7 +33,7 @@ truebeta1=1
 truebeta2=3
 truesigma2=4
 truetau2_11=2
-truetau2_12=0.4
+truetau2_12=0.8
 truetau2_22=3
 PairCov<-matrix(c(truetau2_11, truetau2_12, truetau2_12, truetau2_22), nrow=2, byrow=T)
 ###check positive definite 
@@ -97,10 +97,14 @@ StrSRSWORSampleis=getdata(population, sis)
 #install.packages("lme4")
 library(lme4)
 
-##Census full-liklihood estimator (random slope without random intercept)
+##Census full-liklihood estimator (random slope with random intercept)
 lmer(y~(1+x|cluster)+x,data=population)
 
+##Uninformative sample full-liklihood estimator (random slope with random intercept)
+lmer(y~(1+x|cluster)+x,data=StrSRSWORSample)
 
+##Informative sample full-liklihood estimator (random slope with random intercept)
+lmer(y~(1+x|cluster)+x,data=StrSRSWORSampleis)
 
 # Estimation: pairwise likelihood (without weight)
 l2<-function(y1,y2, g1,g2, x1,x2, alpha, beta, sigma2, tau2_11, tau2_12, tau2_22){
@@ -229,24 +233,13 @@ dtau2_22<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau2_12, tau2
    ddet<- dpc11*pc22+pc11*dpc22-2*pc12*dpc12
    
   
-   ifelse(g1==g2, -1/2*ddet/det-1/2*(-ddet)/(det^2)*(r1^2*pc22-2*r1*r2*pc12+r2^2*pc11)-1/2*1/det*(r1^2*dpc22-2*r1*r2*dpc12+r2^2*dpc11), 0 )
+   -1/2*ddet/det-1/2*(-ddet)/(det^2)*(r1^2*pc22-2*r1*r2*pc12+r2^2*pc11)-1/2*1/det*(r1^2*dpc22-2*r1*r2*dpc12+r2^2*dpc11)
 }	
 
 
 #optimization problem for pariwise likelihood estimation (without weight)
-fast_pl<-function(y,g,x, theta){
-   n<-length(y)
-   ij=expand.grid(1:n,1:n)
-   ij<-ij[ij[,1]<ij[,2],]
-   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-   i<-ij[,1]
-   j<-ij[,2]
-   increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-                sigma2=exp(theta[3]),tau2_11=exp(theta[4]),tau2_12=exp(theta[5]), tau2_22=exp(theta[6]))
-   sum(increment)/T
-}
 
-fast_fit<-function(y,g,x, pars){
+fit_PL<-function(y,g,x, pars){
    n<-length(y)
    ij=expand.grid(1:n,1:n)
    ij<-ij[ij[,1]<ij[,2],]
@@ -282,15 +275,15 @@ fast_fit<-function(y,g,x, pars){
 
 ##Find the PML (without weight)
 ###uninformative 
-estimator<- fast_fit(y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, pars=c(5, 5, 5, 5, 5, 5))
-estimator
+estimator_PL<- fit_PL(y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, pars=c(5, 5, 5, 5, 5, 5))
+estimator_PL
 
 ###informative sampling
-estimatoris<- fast_fit(y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, pars=c(1,4,1,1, 1, 2))
-estimatoris
+estimatoris_PL<- fit_PL(y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, pars=c(1,4,1,1, 1, 2))
+estimatoris_PL
 
 ##Define the pairwise score function and checking the pairwise score at PML (without weight)
-fast_pairscore<-function(y,g,x, theta){
+pairscore_PL<-function(y,g,x, theta){
    n<-length(y)
    ij=expand.grid(1:n,1:n)
    ij<-ij[ij[,1]<ij[,2],]
@@ -315,9 +308,9 @@ fast_pairscore<-function(y,g,x, theta){
 }
 
 ##uninformative sampling (without weight)
-fast_pairscore(StrSRSWORSample$y, StrSRSWORSample$cluster, StrSRSWORSample$x,estimator[[1]])
+pairscore_PL(StrSRSWORSample$y, StrSRSWORSample$cluster, StrSRSWORSample$x,estimator[[1]])
 ##informative sampling (without weight)
-fast_pairscore(StrSRSWORSampleis$y, StrSRSWORSampleis$cluster, StrSRSWORSampleis$x,estimatoris[[1]])
+pairscore_PL(StrSRSWORSampleis$y, StrSRSWORSampleis$cluster, StrSRSWORSampleis$x,estimatoris[[1]])
 
 dyn.load("FourOrdPi.so")
 
@@ -394,7 +387,7 @@ wdtau2_22<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11,tau2_12, tau2
 }
 
 #optimization (WPL)
-fast_wfit<-function(y,g,x, pos, sc, n2infor, N2,  pars){
+fit_WPL<-function(y,g,x, pos, sc, n2infor, N2,  pars){
    n<-length(y)
    ij=expand.grid(1:n,1:n)
    ij<-ij[ij[,1]<ij[,2],]
@@ -430,14 +423,14 @@ fast_wfit<-function(y,g,x, pos, sc, n2infor, N2,  pars){
 
 ##Find the WPML
 ###Uninformative sampling (with weight )
-westimator<- fast_wfit(StrSRSWORSample$y, StrSRSWORSample$cluster,StrSRSWORSample$x, StrSRSWORSample$ID_unit, 
+westimator<- fit_WPL(StrSRSWORSample$y, StrSRSWORSample$cluster,StrSRSWORSample$x, StrSRSWORSample$ID_unit, 
                        StrSRSWORSample$strata,n2infor=rep(n2,N1), N2,  pars=c(5,5,5,5,5,5))
 ###informative sampling (with weight)
-westimatoris<- fast_wfit(StrSRSWORSampleis$y, StrSRSWORSampleis$cluster,StrSRSWORSampleis$x, StrSRSWORSampleis$ID_unit, 
+westimatoris<- fit_WPL(StrSRSWORSampleis$y, StrSRSWORSampleis$cluster,StrSRSWORSampleis$x, StrSRSWORSampleis$ID_unit, 
                          StrSRSWORSampleis$strata,n2infor=n2is, N2,  pars=c(5,5,5,5,5,5))
 
 ##Define the  pairwise score function and check the value of pairwise score function at WPML
-fast_wpairscore<-function(y,g,x, theta, pos, sc, n2infor, N2){
+pairscore_WPL<-function(y,g,x, theta, pos, sc, n2infor, N2){
    n<-length(y)
    ij=expand.grid(1:n,1:n)
    ij<-ij[ij[,1]<ij[,2],]
@@ -463,7 +456,7 @@ fast_wpairscore<-function(y,g,x, theta, pos, sc, n2infor, N2){
    }
 
 ##uniformative sampling (with weight)
-fast_wpairscore(y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, theta=westimator[[1]],
+pairscore_WPL(y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, theta=westimator[[1]],
                 pos=StrSRSWORSample$ID_unit, StrSRSWORSample$strata, n2infor=rep(n2, N1),N2)
 ##informative sampling (with weight)
 fast_wpairscore(y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, theta=westimatoris[[1]],
