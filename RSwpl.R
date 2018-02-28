@@ -112,7 +112,6 @@ l2<-function(y1,y2, g1,g2, x1,x2, alpha, beta, sigma2, tau2_11, tau2_12, tau2_22
    r2<-y2-alpha-beta*x2
    
    det<-pc11*pc22-pc12^2
-    #(-(r1*r1*pc-2*r1*r2*iftau+r2*r2*pc22)/2/det-log(det)/2)
    
    -log(det)/2-(1/2)*(1/det)*(r1^2*pc22-2*r1*r2*pc12+r2^2*pc11)
    
@@ -133,14 +132,11 @@ dalpha<-function(y1,y2, g1,g2, x1,x2,alpha,beta, sigma2,tau2_11, tau2_12, tau2_2
    dr1<- -1
    dr2<- -1
 
-   
-   #((r1*pc22-r2*iftau-r1*iftau+r2*pc11)/det)
    (-1/2)*(1/det)*(2*r1*dr1*pc22-2*dr1*r2*pc12-2*r1*dr2*pc12+2*r2*dr2*pc11 )
    
 }
 
 dbeta<-function(y1,y2, g1,g2, x1,x2,alpha,beta, sigma2,tau2_11, tau2_12, tau2_22){
-   
    pc11<-tau2_11+2*x1*tau2_12+x1^2*tau2_22+sigma2 #pairwise covariance for 11
    pc22<-tau2_11+2*x2*tau2_12+x2^2*tau2_22+sigma2 #pairwise covariance for 22
    pc12<-ifelse(g1==g2, tau2_11+x1*tau2_12+x2*tau2_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
@@ -153,13 +149,13 @@ dbeta<-function(y1,y2, g1,g2, x1,x2,alpha,beta, sigma2,tau2_11, tau2_12, tau2_22
    dr1<- -x1
    dr2<- -x2
       
-   (-1/2)*(1/det)*(2*r1*dr1*pc22-2*dr1*r2*pc12-2*r1*dr2*pc12+2*r2*dr2*pc11)
+    (-1/2)*(1/det)*(2*r1*dr1*pc22-2*dr1*r2*pc12-2*r1*dr2*pc12+2*r2*dr2*pc11)
 }	
 
 dsigma2<-function(y1,y2, g1,g2, x1,x2,alpha, beta, sigma2,tau2_11, tau2_12, tau2_22){
    pc11<-tau2_11+2*x1*tau2_12+x1^2*tau2_22+sigma2 #pairwise covariance for 11
    pc22<-tau2_11+2*x2*tau2_12+x2^2*tau2_22+sigma2 #pairwise covariance for 22
-   pc12<-ifelse(g1==g2, tau2_11+x1*tau2_12+x2*tau2_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   pc12<- ifelse(g1==g2, tau2_11+x1*tau2_12+x2*tau2_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
    
    r1<-y1-alpha-beta*x1
    r2<-y2-alpha-beta*x2
@@ -172,14 +168,14 @@ dsigma2<-function(y1,y2, g1,g2, x1,x2,alpha, beta, sigma2,tau2_11, tau2_12, tau2
    
    ddet<-dpc11*pc22+pc11*dpc22-2*pc12*dpc12
       
-   (-1/2)*(ddet/det)-1/2*(-ddet)/(det)^2*(r1^2*pc22-2*r1*r2*pc12+r2^2*pc11)-1/2*1/det*(r1^2*dpc22-2*r1*r2*dpc12+r2^2*dpc11)
+     (-1/2)*(ddet/det)-1/2*(-ddet)/(det)^2*(r1^2*pc22-2*r1*r2*pc12+r2^2*pc11)-1/2*(1/det)*(r1^2*dpc22-2*r1*r2*dpc12+r2^2*dpc11)
 }	
 
 
 dtau2_11<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau2_12, tau2_22){
    pc11<-tau2_11+2*x1*tau2_12+x1^2*tau2_22+sigma2 #pairwise covariance for 11
    pc22<-tau2_11+2*x2*tau2_12+x2^2*tau2_22+sigma2 #pairwise covariance for 22
-   pc12<-ifelse(g1==g2, tau2_11+x1*tau2_12+x2*tau2_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   pc12<-ifelse(g1==g2,  tau2_11+x1*tau2_12+x2*tau2_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
    
    r1<-y1-alpha-beta*x1
    r2<-y2-alpha-beta*x2
@@ -189,14 +185,12 @@ dtau2_11<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau2_12, tau2
    dpc11<-1
    dpc22<-1
    dpc12<-ifelse(g1==g2, 1, 0)
+   
    ddet<- dpc11*pc22+pc11*dpc22-2*pc12*dpc12
    
    
-   (-1/2)*(ddet/det)-1/2*(-ddet)/(det^2)*(r1^2*pc22-2*r1*r2*pc12+r2^2*pc11)-1/2*1/det*(r1^2*dpc22-2*r1*r2*dpc12+r2^2*dpc11)
-   #ddet<-2*(st-iftau)
-   #(-( (r1*r1-2*r1*r2*ifistau+r2*r2)/2/det - (r1*r1*st-2*r1*r2*iftau+r2*r2*st)*(ddet)/2/det/det) -ddet/det/2)
-   
-   
+   (-1/2)*(ddet/det)-1/2*(-ddet)/(det^2)*(r1^2*pc22-2*r1*r2*pc12+r2^2*pc11)-1/2*(1/det)*(r1^2*dpc22-2*r1*r2*dpc12+r2^2*dpc11)
+  
 }	
 
 
@@ -212,18 +206,18 @@ dtau2_12<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau2_12, tau2
    
    dpc11<-2*x1
    dpc22<-2*x2
-   dpc12<-ifelse(g1==g2,x1+x2, 0)
+   dpc12<-ifelse(g1==g2, x1+x2, 0)
+                 
    ddet<- dpc11*pc22+pc11*dpc22-2*pc12*dpc12
    
    -1/2*ddet/det-1/2*(-ddet)/(det^2)*(r1^2*pc22-2*r1*r2*pc12+r2^2*pc11)-1/2*1/det*(r1^2*dpc22-2*r1*r2*dpc12+r2^2*dpc11)
-#   (-( (r1*r1-2*r1*r2*ifistau+r2*r2)/2/det - (r1*r1*st-2*r1*r2*iftau+r2*r2*st)*(ddet)/2/det/det) -ddet/det/2)
 }	
 
 
 dtau2_22<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau2_12, tau2_22){
    pc11<-tau2_11+2*x1*tau2_12+x1^2*tau2_22+sigma2 #pairwise covariance for 11
    pc22<-tau2_11+2*x2*tau2_12+x2^2*tau2_22+sigma2 #pairwise covariance for 22
-   pc12<-ifelse(g1==g2, tau2_11+x1*tau2_12+x2*tau2_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   pc12<- ifelse(g1==g2, tau2_11+x1*tau2_12+x2*tau2_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
    
    r1<-y1-alpha-beta*x1
    r2<-y2-alpha-beta*x2
@@ -232,11 +226,11 @@ dtau2_22<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau2_12, tau2
 
    dpc11<-x1^2
    dpc22<-x2^2
-   dpc12<-ifelse(g1==g2, x1*x2, 0 )
+   dpc12<-ifelse(g1==g2,  x1*x2, 0)
    ddet<- dpc11*pc22+pc11*dpc22-2*pc12*dpc12
    
-   -1/2*ddet/det-1/2*(-ddet)/(det^2)*(r1^2*pc22-2*r1*r2*pc12+r2^2*pc11)-1/2*1/det*(r1^2*dpc22-2*r1*r2*dpc12+r2^2*dpc11)
- #  -1/2*ddet/det-1/2*(-ddet)/(det^2)*(r1^2*pc22-2*r1*r2*pc12+r2^2*pc11)-1/2*1/det*(r1^2*dpc22-2*r1*r2*dpc12+r2^2*dpc11)
+  
+   ifelse(g1==g2, -1/2*ddet/det-1/2*(-ddet)/(det^2)*(r1^2*pc22-2*r1*r2*pc12+r2^2*pc11)-1/2*1/det*(r1^2*dpc22-2*r1*r2*dpc12+r2^2*dpc11), 0 )
 }	
 
 
@@ -283,35 +277,6 @@ fast_fit<-function(y,g,x, pars){
       c(sum(incrementda), sum(incrementdb), sum(incrementds), sum(incrementdt_11),  sum(incrementdt_12),  sum(incrementdt_22))/T
    }
    optim(pars,func1, gr,  method="BFGS",control=list(fnscale=-1,parscale=c(1/n,1/n,1/n,1/n, 1/n, 1/n)))
-}
-
-
-fast_pl<-function(y,g,x, theta){
-   n<-length(y)
-   ij=expand.grid(1:n,1:n)
-   ij<-ij[ij[,1]<ij[,2],]
-   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-   i<-ij[,1]
-   j<-ij[,2]
-   increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-                sigma2=exp(theta[3]),tau2_11=exp(theta[4]),tau2_12=exp(theta[5]), tau2_22=exp(theta[6]))
-   sum(increment)/T
-}
-
-fast_fit<-function(y,g,x, pars){
-   n<-length(y)
-   ij=expand.grid(1:n,1:n)
-   ij<-ij[ij[,1]<ij[,2],]
-   ij<-ij[g[ij[,1]]==g[ij[,2]],]
-   i<-ij[,1]
-   j<-ij[,2]
-   
-   func1<-function(theta){
-      increment=l2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-                   sigma2=exp(theta[3]),tau2_11=exp(theta[4]),tau2_12=exp(theta[5]), tau2_22=exp(theta[6]))
-      sum(increment)/T
-   }
-   optim(pars,func1,  method="BFGS",control=list(fnscale=-1,parscale=c(1/n,1/n,1/n,1/n, 1/n, 1/n)))
 }
 
 
