@@ -193,7 +193,6 @@ dtau2_11<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau2_12, tau2
   
 }	
 
-
 dtau2_12<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau2_12, tau2_22){
    pc11<-tau2_11+2*x1*tau2_12+x1^2*tau2_22+sigma2 #pairwise covariance for 11
    pc22<-tau2_11+2*x2*tau2_12+x2^2*tau2_22+sigma2 #pairwise covariance for 22
