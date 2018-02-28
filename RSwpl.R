@@ -309,9 +309,9 @@ pairscore_PL<-function(y,g,x, theta){
 }
 
 ##uninformative sampling (without weight)
-pairscore_PL(StrSRSWORSample$y, StrSRSWORSample$cluster, StrSRSWORSample$x,estimator[[1]])
+pairscore_PL(StrSRSWORSample$y, StrSRSWORSample$cluster, StrSRSWORSample$x,estimator_PL[[1]])
 ##informative sampling (without weight)
-pairscore_PL(StrSRSWORSampleis$y, StrSRSWORSampleis$cluster, StrSRSWORSampleis$x,estimatoris[[1]])
+pairscore_PL(StrSRSWORSampleis$y, StrSRSWORSampleis$cluster, StrSRSWORSampleis$x,estimatoris_PL[[1]])
 
 dyn.load("FourOrdPi.so")
 
@@ -484,8 +484,8 @@ pl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORS
                 sigma2=exp(theta[3]),tau2_11=exp(theta[4]), tau2_12=exp(theta[5]), tau2_22=exp(theta[6]))
    sum(increment)/T
 }
-estH_PL=hessian(pl, estimator[[1]])
-
+estH_PL=hessian(pl, estimator_PL[[1]])
+warnings(estH_PL)
 
 #Calculate  variance matrix J  for PL (meat for uninformative sampling design)
 fast_J_PL<-function(y,g,x,pos, sc,  n2infor,N2, theta){
@@ -563,7 +563,7 @@ plis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrS
                 sigma2=exp(theta[3]),tau2_11=exp(theta[4]), tau2_12=exp(theta[5]), tau2_22=exp(theta[6]) )
    sum(increment)/T
 }
-estHis_PL=hessian(plis, estimatoris[[1]])
+estHis_PL=hessian(plis, estimatoris_PL[[1]])
 
 #Calculate  variance matrix J  for PL (meat for informative sampling design)
 estJis_PL=fast_J_PL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,x=StrSRSWORSampleis$x,pos=StrSRSWORSampleis$ID_unit,  
@@ -590,7 +590,7 @@ wpl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWOR
                  sigma2=exp(theta[3]),tau2_11=exp(theta[4]),tau2_12=exp(theta[5]), tau2_22=exp(theta[6]) , pos[i], pos[j], sc[i], sc[j], n2infor,N2)
    sum(increment)/T
 }
-estH_WPL=hessian(wpl, westimator[[1]])
+estH_WPL=hessian(wpl, estimator_WPL[[1]])
 estH_WPL
 
 
@@ -608,9 +608,9 @@ wplis=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=Str
                  sigma2=exp(theta[3]),tau2_11=exp(theta[4]),tau2_12=exp(theta[5]),tau2_22=exp(theta[6]),  pos[i], pos[j],  sc[i], sc[j], n2infor,N2)
    sum(increment)/T
 }
-estHis_WPL=hessian(wplis, westimatoris[[1]])
+estHis_WPL=hessian(wplis, estimatoris_WPL[[1]])
 estHis_WPL
-
+warnings(estHis_WPL)
 
 
 ##define \hat{J}(\theta) as in page 97 of my thesis and  evaluate at the WPLE
@@ -637,11 +637,11 @@ fast_J_WPL<-function(y,g,x,  pos,  sc, n2infor,N2, theta){
          incrementdsij=exp(theta[3])*wdsigma2(y[i],y[j],g[i],g[j],x[i],x[j],alpha=theta[1],beta=theta[2],
                                               sigma2=exp(theta[3]),tau2_11=exp(theta[4]), tau2_12=exp(theta[5]),  tau2_22=exp(theta[6]),
                                               pos[i], pos[j],sc[i], sc[j], n2infor,N2)
-         incrementdt_11ij=exp(theta[4])*wdtau2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],sigma2=exp(theta[3]),
+         incrementdt_11ij=exp(theta[4])*wdtau2_11(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],sigma2=exp(theta[3]),
                                             tau2_11=exp(theta[4]), tau2_12=exp(theta[5]),  tau2_22=exp(theta[6]),pos[i], pos[j], sc[i], sc[j], n2infor,N2)
-         incrementdt_12ij=exp(theta[5])*wdtau2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],sigma2=exp(theta[3]),
+         incrementdt_12ij=exp(theta[5])*wdtau2_12(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],sigma2=exp(theta[3]),
                                                tau2_11=exp(theta[4]), tau2_12=exp(theta[5]),  tau2_22=exp(theta[6]),pos[i], pos[j], sc[i], sc[j], n2infor,N2)
-         incrementdt_22ij=exp(theta[6])*wdtau2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],sigma2=exp(theta[3]),
+         incrementdt_22ij=exp(theta[6])*wdtau2_22(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],sigma2=exp(theta[3]),
                                                tau2_11=exp(theta[4]), tau2_12=exp(theta[5]),  tau2_22=exp(theta[6]),pos[i], pos[j], sc[i], sc[j], n2infor,N2)
          
          wpsij=c(incrementdaij, incrementdbij, incrementdsij, incrementdt_11ij, incrementdt_12ij, incrementdt_22ij)
@@ -939,11 +939,45 @@ for(i in 1:LOTS){
 }	
 
 
+
 #boxplot for uninformative sampling (NML, PL and WPL)
 color=c( rep(c("green", "blue", "red", "yellow"), 4))
 name=c("alpha_NML", "beta_NML", "sigma^2_NML", "tau^2_NML", "alpha_PL", "beta_PL", "sigma^2_PL", "tau^2_PL", "alpha_WPL", "beta_WPL", "sigma^2_WPL", "tau^2_WPL" )
-boxplot(cbind(Fit_NML[, 1:4],Fit_PL[, 1:4], Fit_WPL[, 1:4] ),   col=color)
+boxplot(cbind(Fit_NML[,c(1:4)],Fit_PL[,c(1:4)], Fit_WPL[,c(1:4)]) ,   col=color)
 abline(h=0)
+
 #boxplot for informative sampling (NML,PL and WPL)
-boxplot(cbind(Fitis_NML[, 1:4],Fitis_PL[, 1:4], Fitis_WPL[, 1:4] ),   col=color)
+boxplot(cbind(Fitis_NML[,c(1:4)],Fitis_PL[,c(1:4)], Fitis_WPL[,c(1:4)]) ,   col=color)
 abline(h=0)
+
+apply(Fit_NML, 2 , mean)
+apply(Fit_PL, 2, mean)
+apply(Fit_WPL, 2, mean)
+apply(Fit_NML, 2, sd)
+apply(Fit_PL, 2, sd)
+apply(Fit_WPL, 2, sd)
+
+apply(Fitis_NML, 2 , mean)
+apply(Fitis_PL, 2, mean)
+apply(Fitis_WPL, 2, mean)
+apply(Fitis_NML, 2, sd)
+apply(Fitis_PL, 2, sd)
+apply(Fitis_WPL, 2, sd)
+
+apply(G_PL, 1:2, mean)
+apply(Gis_PL, 1:2, mean)
+
+apply(G_WPL, 1:2, mean)
+apply(Gis_WPL, 1:2, mean)
+
+apply(PS_PL, 2, mean)
+apply(PSis_PL, 2, mean)
+
+apply(PS_WPL, 2, mean)
+apply(PSis_WPL, 2, mean)
+
+apply(J_PL, 2, mean)
+apply(Jis_PL, 2, mean)
+
+apply(J_WPL, 2, mean)
+apply(Jis_WPL, 2, mean)
