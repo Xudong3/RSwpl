@@ -1,7 +1,7 @@
 
 #setting: notation
-N1=100 ## number of strata 
-N2=100 ##number of elements in each strata (population level)
+N1=20 ## number of strata 
+N2=20 ##number of elements in each strata (population level)
 latitude<-1:N2
 longitude<-1:N1
 population<-expand.grid(lat=latitude,long=longitude)
@@ -36,6 +36,7 @@ truetau2_11=2
 truetau2_12=0.8
 truetau2_22=3
 PairCov<-matrix(c(truetau2_11, truetau2_12, truetau2_12, truetau2_22), nrow=2, byrow=T)
+det(PairCov)
 ###check positive definite 
 #install.packages("matrixcalc")
 library("matrixcalc")
@@ -423,10 +424,10 @@ fit_WPL<-function(y,g,x, pos, sc, n2infor, N2,  pars){
 
 ##Find the WPML
 ###Uninformative sampling (with weight )
-westimator<- fit_WPL(StrSRSWORSample$y, StrSRSWORSample$cluster,StrSRSWORSample$x, StrSRSWORSample$ID_unit, 
+estimator_WPL<- fit_WPL(StrSRSWORSample$y, StrSRSWORSample$cluster,StrSRSWORSample$x, StrSRSWORSample$ID_unit, 
                        StrSRSWORSample$strata,n2infor=rep(n2,N1), N2,  pars=c(5,5,5,5,5,5))
 ###informative sampling (with weight)
-westimatoris<- fit_WPL(StrSRSWORSampleis$y, StrSRSWORSampleis$cluster,StrSRSWORSampleis$x, StrSRSWORSampleis$ID_unit, 
+estimatoris_WPL<- fit_WPL(StrSRSWORSampleis$y, StrSRSWORSampleis$cluster,StrSRSWORSampleis$x, StrSRSWORSampleis$ID_unit, 
                          StrSRSWORSampleis$strata,n2infor=n2is, N2,  pars=c(5,5,5,5,5,5))
 
 ##Define the  pairwise score function and check the value of pairwise score function at WPML
@@ -456,10 +457,10 @@ pairscore_WPL<-function(y,g,x, theta, pos, sc, n2infor, N2){
    }
 
 ##uniformative sampling (with weight)
-pairscore_WPL(y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, theta=westimator[[1]],
+pairscore_WPL(y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, theta=estimator_WPL[[1]],
                 pos=StrSRSWORSample$ID_unit, StrSRSWORSample$strata, n2infor=rep(n2, N1),N2)
 ##informative sampling (with weight)
-fast_wpairscore(y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, theta=westimatoris[[1]],
+pairscore_WPL(y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, theta=estimatoris_WPL[[1]],
                 pos=StrSRSWORSampleis$ID_unit, StrSRSWORSampleis$strata, n2infor=n2is,N2 )
 
 
