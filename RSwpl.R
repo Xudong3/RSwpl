@@ -772,9 +772,13 @@ PSis_WPL<-matrix(0,nrow=LOTS,ncol=6)
 for(i in 1:LOTS){
    
    cat(i)
-   population$u<-rnorm(T,s=sqrt(truetau2))[population$cluster]
+   re=mvrnorm(n=T, mu = c(0,0), Sigma = PairCov) #generate vector of random effect (a, b)
+   population$a<-re[,1][population$cluster]
+   population$b<-re[,2][population$cluster]
+   
+   
    population$x<-rnorm(N1*N2)+rnorm(T)[population$cluster]
-   population$y<-with(population, truebeta1+truebeta2*x+u+rnorm(N1*N2,s=sqrt(truesigma2)))
+   population$y<-with(population, truebeta1+a+truebeta2*x+b*x+rnorm(N1*N2,s=sqrt(truesigma2)))
    population$r=with(population, x*(y-truebeta1-truebeta2*x))
    
    
@@ -791,16 +795,20 @@ for(i in 1:LOTS){
    StrSRSWORSampleis=getdata(population, sis)
    
    #NML, PL and WPL (uninformative sampling)
-   ra<-lmer(y~(1|cluster)+x,data=StrSRSWORSample)
-   rb<-fast_fit(StrSRSWORSample$y,StrSRSWORSample$cluster, StrSRSWORSample$x,pars=c(1,1,0,0, 1, 1) )
-   rc<-fast_wfit(StrSRSWORSample$y,StrSRSWORSample$cluster,StrSRSWORSample$x, StrSRSWORSample$ID_unit, 
-                 StrSRSWORSample$strata, n2infor=rep(n2, N1), N2,  pars=c(1,1,1,1, 1, 1))
+   ra<-lmer(y~(1+x|cluster)+x,data=StrSRSWORSample)
+   rb<-fit_PL(StrSRSWORSample$y,StrSRSWORSample$cluster, StrSRSWORSample$x, pars=c(truevalue[1:2], log(truevalue[3:4]),  truevalue[5], 
+                                                                                     log(truevalue[6])))
+   rc<-fit_WPL(StrSRSWORSample$y,StrSRSWORSample$cluster,StrSRSWORSample$x, StrSRSWORSample$ID_unit, 
+            StrSRSWORSample$strata, n2infor=rep(n2, N1), N2,  pars=c(truevalue[1:2], log(truevalue[3:4]),  truevalue[5], 
+                                                                          log(truevalue[6])))
    
    #NML, PL and WPL (informative sampling)
-   rais<-lmer(y~(1|cluster)+x,data=StrSRSWORSampleis)
-   rbis<-fast_fit(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x,pars=c(1,1,1,1, 1,1) )
-   rcis<-fast_wfit( y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
-                    x=StrSRSWORSampleis$x, StrSRSWORSampleis$ID_unit,StrSRSWORSampleis$strata, n2infor=n2is, N2, pars=c(1,1,1,1,1, 1))
+   rais<-lmer(y~(1+x|cluster)+x,data=StrSRSWORSampleis)
+   rbis<-fit_PL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x, pars=c(truevalue[1:2], log(truevalue[3:4]),  truevalue[5], 
+                                                                                                   log(truevalue[6])))
+   rcis<-fit_WPL( y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
+                    x=StrSRSWORSampleis$x, StrSRSWORSampleis$ID_unit,StrSRSWORSampleis$strata, n2infor=n2is, N2, pars=c(truevalue[1:2], log(truevalue[3:4]),  truevalue[5], 
+                                                                                                                        log(truevalue[6])))
    
    #NML (uniformative sampling)
    Fit_NML[i,1:2]<-fixef(ra)-truevalue[1:2]
@@ -809,11 +817,15 @@ for(i in 1:LOTS){
    
    #PL (uninformative sampling)
    Fit_PL[i,1:2]<-rb$par[1:2]-truevalue[1:2]
-   Fit_PL[i,3:6]<-exp(rb$par[3:6])-truevalue[3:6] #reparametrize by taking exponential 
+   Fit_PL[i,3:4]<-exp(rb$par[3:4])-truevalue[3:4] #reparametrize by taking exponential 
+   Fit_PL[i,5]<-rb$par[5]-truevalue[5]
+   Fit_PL[i,6]<-exp(rb$par[6])-truevalue[6] #reparametrize by taking exponential 
    
    #WPL (uniformative sampling)
    Fit_WPL[i,1:2]<-rc$par[1:2]-truevalue[1:2]
-   Fit_WPL[i,3:6]<-exp(rc$par[3:6])-truevalue[3:6] #reparametrize by taking exponential 
+   Fit_WPL[i,3:4]<-exp(rc$par[3:4])-truevalue[3:4] #reparametrize by taking exponential 
+   Fit_WPL[i,5]<-rc$par[5]-truevalue[5]
+   Fit_WPL[i,6]<-exp(rc$par[6])-truevalue[6] #reparametrize by taking exponential 
    
    #NML (informative sampling)
    Fitis_NML[i,1:2]<-fixef(rais)-truevalue[1:2]
@@ -822,12 +834,15 @@ for(i in 1:LOTS){
    
    #PL (informative sampling)
    Fitis_PL[i,1:2]<-rbis$par[1:2]-truevalue[1:2]
-   Fitis_PL[i,3:6]<-exp(rbis$par[3:6])-truevalue[3:6] #reparametrize by taking exponential 
+   Fitis_PL[i,3:4]<-exp(rbis$par[3:4])-truevalue[3:4] #reparametrize by taking exponential 
+   Fitis_PL[i,5]<-rbis$par[5]-truevalue[5] 
+   Fitis_PL[i,6]<-exp(rbis$par[6])-truevalue[6]#reparametrize by taking exponential 
    
    #WPLE (iformative sampling)
    Fitis_WPL[i,1:2]<-rcis$par[1:2]-truevalue[1:2]
-   Fitis_WPL[i,3:6]<-exp(rcis$par[3:6])-truevalue[3:6] #reparametrize by taking exponential 
-   
+   Fitis_WPL[i,3:4]<-exp(rcis$par[3:4])-truevalue[3:4] #reparametrize by taking exponential 
+   Fitis_WPL[i,5]<-rcis$par[5]-truevalue[5]
+   Fitis_WPL[i,6]<-exp(rcis$par[6])-truevalue[6] #reparametrize by taking exponential 
    
    #Calculate Hessian matrix H for PL (bread for uninformative sampling design)
    pl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, n2infor=rep(n2, N1), N2=length(unique(population$lat)) ){
@@ -852,8 +867,9 @@ for(i in 1:LOTS){
    G_PL[, ,i] = solve(H_PL[,,i])%*% J_PL[, , i]%*% t(solve(H_PL[,,i])) 
    
    #Pairwise score function PL (uninformative sampling)
-   PS_PL[i, ]<- fast_pairscore(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,
-                               x=StrSRSWORSample$x,theta=c(truevalue[1:2], log(truevalue[3:4])))
+   PS_PL[i, ]<- pairscore_PL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,
+                               x=StrSRSWORSample$x,theta=c(truevalue[1:2], log(truevalue[3:4]),  truevalue[5], 
+                                                           log(truevalue[6])))
    
    #Calculate Hessian matrix H for PL (bread for informative sampling design)
    pl=function (theta, y=StrSRSWORSampleis$y, g=StrSRSWORSampleis$cluster, x=StrSRSWORSampleis$x,
@@ -879,12 +895,14 @@ for(i in 1:LOTS){
    Gis_PL[, ,i] = solve(His_PL[,,i])%*% Jis_PL[, , i]%*% t(solve(His_PL[,,i]))
    
    #Pairwise score function PL (informative sampling)
-   PSis_PL[i, ]<- fast_pairscore(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
-                                 x=StrSRSWORSampleis$x,theta=c(truevalue[1:2], log(truevalue[3:6])))
+   PSis_PL[i, ]<- pairscore_PL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
+                                 x=StrSRSWORSampleis$x,theta=c(truevalue[1:2], log(truevalue[3:4]),  truevalue[5], 
+                                                               log(truevalue[6])))
    
    #Calculate Hessian matrix H for WPL (bread for uninformative sampling design)
-   wpl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x, pos=StrSRSWORSample$ID_unit, 
-                 sc=StrSRSWORSample$strata, n2infor=rep(n2, N1), N2=length(unique(population$lat)) ){
+   wpl=function (theta, y=StrSRSWORSample$y, g=StrSRSWORSample$cluster, x=StrSRSWORSample$x,
+                 pos=StrSRSWORSample$ID_unit, sc=StrSRSWORSample$strata, 
+                 n2infor=rep(n2, N1), N2=length(unique(population$lat)) ){
       n<-length(y)
       ij=expand.grid(1:n,1:n)
       ij<-ij[ij[,1]<ij[,2],]
@@ -892,7 +910,7 @@ for(i in 1:LOTS){
       i<-ij[,1]
       j<-ij[,2]
       increment=wl2(y[i],y[j],g[i],g[j],x[i],x[j], alpha=theta[1],beta=theta[2],
-                    sigma2=exp(theta[3]),tau2_11=exp(theta[4]), tau2_11=theta[5],tau2_11=exp(theta[6]),  pos[i], pos[j], sc[i], sc[j], n2infor,N2)
+                    sigma2=exp(theta[3]),tau2_11=exp(theta[4]),tau_12=theta[5], tau2_22=exp(theta[6]) , pos[i], pos[j], sc[i], sc[j], n2infor,N2)
       sum(increment)/T
    }
    H_WPL[,,i]=hessian(wpl, rc[[1]])
@@ -906,8 +924,9 @@ for(i in 1:LOTS){
    G_WPL[, ,i] = solve(H_WPL[,,i])%*% J_WPL[, , i]%*% t(solve(H_WPL[,,i]))
    
    #Pairwise score function WPL (uninformative sampling)
-   PS_WPL[i, ]<- fast_wpairscore(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,
-                                 x=StrSRSWORSample$x,theta=c(truevalue[1:2], log(truevalue[3:6])),
+   PS_WPL[i, ]<- pairscore_WPL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,
+                                 x=StrSRSWORSample$x,theta=c(truevalue[1:2], log(truevalue[3:4]),  truevalue[5], 
+                                                             log(truevalue[6])),
                                  pos=StrSRSWORSample$ID_unit, StrSRSWORSample$strata, n2infor=rep(n2, N1),N2)
    
    
@@ -936,9 +955,9 @@ for(i in 1:LOTS){
    Gis_WPL[,,i]= solve(His_WPL[, , i])%*% Jis_WPL[, , i]%*% t(solve(His_WPL[, , i])) 
    
    #Pairwise score function WPL (informative sampling)
-   PSis_WPL[i, ]<- fast_wpairscore(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
-                                   x=StrSRSWORSampleis$x,theta=c(truevalue[1:2], log(truevalue[3:6])),
-                                   pos=StrSRSWORSampleis$ID_unit, StrSRSWORSampleis$strata, n2infor=n2is,N2)
+   PSis_WPL[i, ]<- pairscore_WPL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
+                        x=StrSRSWORSampleis$x,theta=c(truevalue[1:2], log(truevalue[3:4]),  truevalue[5], 
+                                 log(truevalue[6])),pos=StrSRSWORSampleis$ID_unit, StrSRSWORSampleis$strata, n2infor=n2is,N2)
    
 }	
 
