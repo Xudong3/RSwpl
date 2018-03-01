@@ -103,7 +103,7 @@ fit_NML=lmer(y~(1+x|cluster)+x,data=population)
 ###summary(fit_NML)
 
 ### get the fixed effect for alpha and beta 
-fixef(fit_NML)[1]
+fixef(fit_NML)
 
 ### get the sigma2 for the error term 
 sigma(fit_NML)^2
@@ -823,7 +823,7 @@ for(i in 1:LOTS){
    #NML (uniformative sampling)
    Fit_NML[i,1:2]<-fixef(ra)-truevalue[1:2]
    Fit_NML[i,3]<-sigma(ra)^2-truevalue[3]
-   Fit_NML[i,4]<-as.numeric(VarCorr(ra))-truevalue[4]
+   Fit_NML[i,4:6]<-VarCorr(ra)$cluster[c(1, 2,4)] -truevalue[4:6]
    
    #PL (uninformative sampling)
    Fit_PL[i,1:2]<-rb$par[1:2]-truevalue[1:2]
@@ -840,7 +840,7 @@ for(i in 1:LOTS){
    #NML (informative sampling)
    Fitis_NML[i,1:2]<-fixef(rais)-truevalue[1:2]
    Fitis_NML[i,3]<-sigma(rais)^2-truevalue[3]
-   Fitis_NML[i,4]<-as.numeric(VarCorr(rais))-truevalue[4]
+   Fitis_NML[i,4:6]<-VarCorr(rais)$cluster[c(1, 2,4)] -truevalue[4:6]
    
    #PL (informative sampling)
    Fitis_PL[i,1:2]<-rbis$par[1:2]-truevalue[1:2]
