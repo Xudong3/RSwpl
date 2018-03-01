@@ -99,7 +99,19 @@ StrSRSWORSampleis=getdata(population, sis)
 library(lme4)
 
 ##Census full-liklihood estimator (random slope with random intercept)
-lmer(y~(1+x|cluster)+x,data=population)
+fit_NML=lmer(y~(1+x|cluster)+x,data=population)
+###summary(fit_NML)
+
+### get the fixed effect for alpha and beta 
+fixef(fit_NML)[1]
+
+### get the sigma2 for the error term 
+sigma(fit_NML)^2
+
+### get the variance for the random effect \tau2_11, \tau_12, \tau2_22  
+VarCorr(fit_NML)$cluster[c(1, 2,4)] # this is the variance not standard deviation
+
+
 
 ##Uninformative sample full-liklihood estimator (random slope with random intercept)
 lmer(y~(1+x|cluster)+x,data=StrSRSWORSample)
@@ -239,7 +251,6 @@ dtau2_22<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau_12, tau2_
 
 
 #optimization problem for pariwise likelihood estimation (without weight)
-
 fit_PL<-function(y,g,x, pars){
    n<-length(y)
    ij=expand.grid(1:n,1:n)
@@ -780,7 +791,6 @@ for(i in 1:LOTS){
    population$x<-rnorm(N1*N2)+rnorm(T)[population$cluster]
    population$y<-with(population, truebeta1+a+truebeta2*x+b*x+rnorm(N1*N2,s=sqrt(truesigma2)))
    population$r=with(population, x*(y-truebeta1-truebeta2*x))
-   
    
    
    #uninformative sampling design
