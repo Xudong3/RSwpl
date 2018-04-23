@@ -987,6 +987,48 @@ boxplot(cbind(Fitis_NML[,c(1:6)],Fitis_PL[,c(1:6)], Fitis_WPL[,c(1:6)] ),   col=
 abline(h=0)
 
 
+#define the squre root of J
+sqrt_diagJ_PL=matrix(0, nrow=LOTS, ncol=6)
+for ( i in 1:LOTS){
+    sqrt_diagJ_PL[i,]= sqrt(diag(J_PL[,,i]))
+}
+
+sqrt_diagJis_PL=matrix(0, nrow=LOTS, ncol=6)
+for ( i in 1:LOTS){
+    sqrt_diagJis_PL[i,]= sqrt(diag(Jis_PL[,,i]))
+}
+
+sqrt_diagJ_WPL=matrix(0, nrow=LOTS, ncol=6)
+for ( i in 1:LOTS){
+    sqrt_diagJ_WPL[i,]= sqrt(diag(J_WPL[,,i]))
+}
+
+sqrt_diagJis_WPL=matrix(0, nrow=LOTS, ncol=6)
+for ( i in 1:LOTS){
+    sqrt_diagJis_WPL[i,]= sqrt(diag(Jis_WPL[,,i]))
+}
+
+#define the squre root of G
+sqrt_diagG_PL=matrix(0, nrow=LOTS, ncol=6)
+for ( i in 1:LOTS){
+    sqrt_diagG_PL[i,]= sqrt(diag(G_PL[,,i]))
+}
+
+sqrt_diagGis_PL=matrix(0, nrow=LOTS, ncol=6)
+for ( i in 1:LOTS){
+    sqrt_diagGis_PL[i,]= sqrt(diag(Gis_PL[,,i]))
+}
+
+sqrt_diagG_WPL=matrix(0, nrow=LOTS, ncol=6)
+for ( i in 1:LOTS){
+    sqrt_diagG_WPL[i,]= sqrt(diag(G_WPL[,,i]))
+}
+
+sqrt_diagGis_WPL=matrix(0, nrow=LOTS, ncol=6)
+for ( i in 1:LOTS){
+    sqrt_diagGis_PL[i,]= sqrt(diag(Gis_WPL[,,i]))
+}
+
 
 #create a table for latex
 #install.packages("xtable")
@@ -1021,56 +1063,17 @@ construct_header <- function(df, grp_names, span, align = "c", draw_line = T) {
 }
 
 
-#install.packages("expm")
-library("expm") #use sqrtm function
-
-#define the squre root of J
-sqrtJ_PL<-array(0, c(6,6, LOTS))
-for ( i in 1:LOTS){
-    sqrtJ_PL[,,i]=sqrtm(J_PL[, , i])
-}
-
-sqrtJis_PL<-array(0, c(6,6, LOTS))
-for ( i in 1:LOTS){
-    sqrtJis_PL[,,i]=sqrtm(Jis_PL[, , i])
-}
-
-sqrtJ_WPL<-array(0, c(6,6, LOTS))
-for ( i in 1:LOTS){
-    sqrtJ_WPL[,,i]=sqrtm(J_WPL[, , i])
-}
-
-sqrtJis_WPL<-array(0, c(6,6, LOTS))
-for ( i in 1:LOTS){
-    sqrtJis_WPL[,,i]=sqrtm(Jis_WPL[, , i])
-}
-
-#define the squre root of G
-sqrtG_PL<-array(0, c(6,6, LOTS))
-for ( i in 1:LOTS){
-    sqrtG_PL[,,i]=sqrtm(G_PL[, , i])
-}
-
-sqrtGis_PL<-array(0, c(6,6, LOTS))
-for ( i in 1:LOTS){
-    sqrtGis_PL[,,i]=sqrtm(Gis_PL[, , i])
-}
-
-sqrtG_WPL<-array(0, c(6,6, LOTS))
-for ( i in 1:LOTS){
-    sqrtG_WPL[,,i]=sqrtm(G_WPL[, , i])
-}
-
-sqrtGis_WPL<-array(0, c(6,6, LOTS))
-for ( i in 1:LOTS){
-    sqrtGis_WPL[,,i]=sqrtm(Gis_WPL[, , i])
-}
 
 
 #bias and sd for uninformative sampling (NML, PL, WPL)
-df<- matrix(c(apply(Fit_NML, 2,  mean), apply(Fit_NML, 2, sd), apply(Fit_PL, 2, mean), apply(Fit_PL, 2, sd),diag(apply(sqrtG_PL, 1:2,  mean)),  apply(Fit_WPL, 2, mean), apply(Fit_WPL, 2, sd), diag(apply(sqrtG_WPL, 1:2,  mean))),ncol=8)
-df<-cbind(c("alpha", "beta", "sigma^2", "tau_11^2", "tau_12", "tau_22^2"), df)
-colnames(df)<-c("",c("bias", "sd"), rep(c("bias", "sd","G^(-\frac{1}{2})"), 2))
+df<- matrix(c(apply(Fit_NML, 2,  mean), apply(Fit_NML, 2, sd), apply(Fit_PL, 2, mean), apply(Fit_PL, 2, sd),
+apply(sqrt_diagG_PL, 2, mean),  apply(Fit_WPL, 2, mean), apply(Fit_WPL, 2, sd),
+apply(sqrt_diagG_WPL, 2, mean)),ncol=8)
+
+df[, c(1,3, 5, 6, 8)]=df[, c(1, 3, 5, 6, 8 )]*100
+df<-round(df, 2)
+df<-cbind(c("beta_0", "beta_1", "sigma^2", "tau_11^2", "tau_12", "tau_22^2"), df)
+colnames(df)<-c("",c("bias*100", "sd"), rep(c("bias*100", "sd","esd*100"), 2))
 df           
 df_header <- construct_header(
 # the data.frame or matrix that should be plotted
@@ -1082,15 +1085,18 @@ span = c(1, 2, 3, 3),
 # the alignment of each group, can be a single character (lcr) or a vector
 align = "c"
 )
-print(xtable(df), add.to.row = df_header, include.rownames = F, hline.after = F)      
+print(xtable(df), add.to.row = df_header, include.rownames = F,  hline.after = F, latex.environments=NULL,booktabs=TRUE)
 
 
 
 
 #variance estimator for uninformative sampling (PL, WPL)          
-vardf<-matrix(c( apply(PS_PL, 2, mean),apply(PS_PL, 2, sd),diag(apply(sqrtJ_PL, 1:2, mean)),apply(PS_WPL, 2, mean),apply(PS_WPL, 2, sd), diag(apply(sqrtJ_WPL, 1:2, mean))),ncol=6)
-vardf<-cbind(c("alpha", "beta", "sigma^2", "tau_11^2", "tau_12", "tau_22^2"), vardf)
-colnames(vardf)<-c("parameter", rep(c("mean of PS", "sd of PS", "J^{\frac{1}{2}}"), 2))
+vardf<- matrix(c( apply(PS_PL, 2, mean),apply(PS_PL, 2, sd),  apply(sqrt_diagJ_PL, 2, mean) ,
+apply(PS_WPL, 2, mean),apply(PS_WPL, 2, sd),  apply(sqrt_diagJ_WPL, 2, mean)),ncol=6)
+
+vardf<-round(vardf,2)
+vardf<-cbind(c("beta_0", "beta_1", "sigma^2", "tau_11^2", "tau_12", "tau_22^2"), vardf)
+colnames(vardf)<-c("parameter", rep(c("mean of PS", "sd of PS", "esd of PS"), 2))
 vardf
 vardf_header <- construct_header(
 # the data.frame or matrix that should be plotted
@@ -1102,15 +1108,18 @@ span = c(1, 3, 3),
 # the alignment of each group, can be a single character (lcr) or a vector
 align = "c"
 )
-print(xtable(vardf), add.to.row = vardf_header, include.rownames = F, hline.after = F)
-
+print(xtable(vardf), add.to.row = vardf_header, include.rownames = F, hline.after = F, latex.environments=NULL,booktabs=TRUE)
 
 #bias and sd for informative sampling (NML, PL, WPL)
-dfis<- matrix(c(apply(Fitis_NML, 2,  mean),apply(Fitis_NML, 2, sd) , apply(Fitis_PL, 2, mean),apply(Fitis_PL, 2, sd),
-diag(apply(sqrtGis_PL, 1:2,  mean)),
-apply(Fitis_WPL, 2, mean),apply(Fitis_WPL, 2, sd),diag(apply(sqrtGis_WPL, 1:2,  mean))),  ncol=8 )
-dfis<-cbind(c("alpha", "beta", "sigma^2", "tau_11^2", "tau_12", "tau_22^2"), dfis)
-colnames(dfis)<-c("parameter", c("bias", "sd"), rep(c("bias", "sd", "G^{-\frac{1}{2}}"), 2))
+dfis<- matrix(c(apply(Fitis_NML, 2,  mean), apply(Fitis_NML, 2, sd), apply(Fitis_PL, 2, mean), apply(Fitis_PL, 2, sd),
+apply(sqrt_diagGis_PL, 2, mean),  apply(Fitis_WPL, 2, mean), apply(Fitis_WPL, 2, sd),
+apply(sqrt_diagGis_WPL, 2, mean)),ncol=8)
+
+df[, c(1,3, 5, 6, 8)]=df[, c(1, 3, 5, 6, 8 )]*100
+dfis=round(dfis, 2)
+
+dfis<-cbind(c("beta_0", "beta_1", "sigma^2", "tau_11^2", "tau_12", "tau_22^2"), dfis)
+colnames(dfis)<-c("parameter", c("bias*100", "sd"), rep(c("bias*100", "sd", "esd*100"), 2))
 dfis
 dfis_header <- construct_header(
 # the data.frame or matrix that should be plotted
@@ -1122,13 +1131,15 @@ span = c(1, 2, 3, 3),
 # the alignment of each group, can be a single character (lcr) or a vector
 align = "c"
 )
-print(xtable(dfis), add.to.row = dfis_header, floating=TRUE,  include.rownames = F, hline.after = F)
+print(xtable(dfis), add.to.row = dfis_header, include.rownames = F,  hline.after = F, latex.environments=NULL,booktabs=TRUE)
 
 
 #variance estimator for informative sampling (PL, WPL)          
-vardfis<-matrix(round(c( apply(PSis_PL, 2, mean),apply(PSis_PL, 2, sd), diag(apply(sqrtJis_PL, 1:2, mean)),apply(PSis_WPL, 2, mean),apply(PSis_WPL, 2, sd), diag(apply(sqrtJis_WPL, 1:2, mean)) ),2), ncol=6 )
-vardfis<-cbind(c("alpha", "beta", "sigma^2", "tau_11^2", "tau_12", "tau_22^2"), vardfis)
-colnames(vardfis)<-c("parameter", rep(c("mean of PS", "sd of PS", "J^{\frac{1}{2}}"), 2))
+vardfis<-matrix(c( apply(PSis_PL, 2, mean),apply(PSis_PL, 2, sd),  apply(sqrt_diagJis_PL, 2, mean) ,
+apply(PSis_WPL, 2, mean),apply(PSis_WPL, 2, sd),  apply(sqrt_diagJis_WPL, 2, mean)),ncol=6)
+vardfis<-round(vardfis,2)
+vardfis<-cbind(c("beta_0", "beta_1", "sigma^2", "tau_11^2", "tau_12", "tau_22^2"), vardfis)
+colnames(vardfis)<-c("parameter", rep(c("mean of PS", "sd of PS", "esd of PS"), 2))
 vardfis
 vardfis_header <- construct_header(
 # the data.frame or matrix that should be plotted
@@ -1140,6 +1151,8 @@ span = c(1, 3, 3),
 # the alignment of each group, can be a single character (lcr) or a vector
 align = "c"
 )   
-print(xtable(vardfis), add.to.row = vardfis_header, include.rownames = F, hline.after = F) 
+
+print(xtable(vardfis), add.to.row = vardfis_header, include.rownames = F, hline.after = F, latex.environments=NULL,booktabs=TRUE)
+
 
 
