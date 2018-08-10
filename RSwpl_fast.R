@@ -1,7 +1,7 @@
 
 #setting: notation
-N1=20 ## number of strata
-N2=50 ##number of elements in each strata (population level)
+N1=120 ## number of strata
+N2=30 ##number of elements in each strata (population level)
 latitude<-1:N2
 longitude<-1:N1
 population<-expand.grid(lat=latitude,long=longitude)
@@ -123,8 +123,9 @@ lmer(y~(1+x|cluster)+x,data=StrSRSWORSampleis)
 l2<-function(y1,y2, g1,g2, x1,x2, alpha, beta, sigma2, tau2_11, tau_12, tau2_22){
    pc11<-tau2_11+2*x1*tau_12+(x1^2)*tau2_22+sigma2 #pairwise covariance for 11
    pc22<-tau2_11+2*x2*tau_12+(x2^2)*tau2_22+sigma2 #pairwise covariance for 22
-   pc12<-ifelse(g1==g2, tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
-
+   #pc12<-ifelse(g1==g2, tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   pc12<-(g1==g2)*( tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22) 
+   
    r1<-y1-alpha-beta*x1
    r2<-y2-alpha-beta*x2
    
@@ -139,7 +140,8 @@ l2<-function(y1,y2, g1,g2, x1,x2, alpha, beta, sigma2, tau2_11, tau_12, tau2_22)
 dalpha<-function(y1,y2, g1,g2, x1,x2,alpha,beta, sigma2,tau2_11, tau_12, tau2_22){
    pc11<-tau2_11+2*x1*tau_12+x1^2*tau2_22+sigma2 #pairwise covariance for 11
    pc22<-tau2_11+2*x2*tau_12+x2^2*tau2_22+sigma2 #pairwise covariance for 22
-   pc12<-ifelse(g1==g2, tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   #pc12<-ifelse(g1==g2, tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   pc12<-(g1==g2)*(tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22)
    
    r1<-y1-alpha-beta*x1
    r2<-y2-alpha-beta*x2
@@ -156,7 +158,8 @@ dalpha<-function(y1,y2, g1,g2, x1,x2,alpha,beta, sigma2,tau2_11, tau_12, tau2_22
 dbeta<-function(y1,y2, g1,g2, x1,x2,alpha,beta, sigma2,tau2_11, tau_12, tau2_22){
    pc11<-tau2_11+2*x1*tau_12+x1^2*tau2_22+sigma2 #pairwise covariance for 11
    pc22<-tau2_11+2*x2*tau_12+x2^2*tau2_22+sigma2 #pairwise covariance for 22
-   pc12<-ifelse(g1==g2, tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   #pc12<-ifelse(g1==g2, tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   pc12<-(g1==g2)* (tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22)
    
    r1<-y1-alpha-beta*x1
    r2<-y2-alpha-beta*x2
@@ -172,7 +175,8 @@ dbeta<-function(y1,y2, g1,g2, x1,x2,alpha,beta, sigma2,tau2_11, tau_12, tau2_22)
 dsigma2<-function(y1,y2, g1,g2, x1,x2,alpha, beta, sigma2,tau2_11, tau_12, tau2_22){
    pc11<-tau2_11+2*x1*tau_12+x1^2*tau2_22+sigma2 #pairwise covariance for 11
    pc22<-tau2_11+2*x2*tau_12+x2^2*tau2_22+sigma2 #pairwise covariance for 22
-   pc12<- ifelse(g1==g2, tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   #pc12<- ifelse(g1==g2, tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   pc12<- (g1==g2)* (tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22)
    
    r1<-y1-alpha-beta*x1
    r2<-y2-alpha-beta*x2
@@ -192,7 +196,8 @@ dsigma2<-function(y1,y2, g1,g2, x1,x2,alpha, beta, sigma2,tau2_11, tau_12, tau2_
 dtau2_11<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau_12, tau2_22){
    pc11<-tau2_11+2*x1*tau_12+x1^2*tau2_22+sigma2 #pairwise covariance for 11
    pc22<-tau2_11+2*x2*tau_12+x2^2*tau2_22+sigma2 #pairwise covariance for 22
-   pc12<-ifelse(g1==g2,  tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   #pc12<-ifelse(g1==g2,  tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   pc12<-(g1==g2)* (tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22) 
    
    r1<-y1-alpha-beta*x1
    r2<-y2-alpha-beta*x2
@@ -213,7 +218,9 @@ dtau2_11<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau_12, tau2_
 dtau_12<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau_12, tau2_22){
    pc11<-tau2_11+2*x1*tau_12+x1^2*tau2_22+sigma2 #pairwise covariance for 11
    pc22<-tau2_11+2*x2*tau_12+x2^2*tau2_22+sigma2 #pairwise covariance for 22
-   pc12<-ifelse(g1==g2, tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   #pc12<-ifelse(g1==g2, tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   pc12<-(g1==g2)*(tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22) #pairwise covariance for 12
+   
    
    r1<-y1-alpha-beta*x1
    r2<-y2-alpha-beta*x2
@@ -233,7 +240,8 @@ dtau_12<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau_12, tau2_2
 dtau2_22<-function(y1,y2, g1,g2, x1,x2,alpha, beta,sigma2,tau2_11, tau_12, tau2_22){
    pc11<-tau2_11+2*x1*tau_12+x1^2*tau2_22+sigma2 #pairwise covariance for 11
    pc22<-tau2_11+2*x2*tau_12+x2^2*tau2_22+sigma2 #pairwise covariance for 22
-   pc12<- ifelse(g1==g2, tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   #pc12<- ifelse(g1==g2, tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22, 0) #pairwise covariance for 12
+   pc12<- (g1==g2)*(tau2_11+x1*tau_12+x2*tau_12+x1*x2*tau2_22) 
    
    r1<-y1-alpha-beta*x1
    r2<-y2-alpha-beta*x2
@@ -914,7 +922,7 @@ for(i in 1:LOTS){
    #}
    #His_PL[,,i]=hessian(pl, rbis[[1]])
    His_PL[,,i]=-jacobian(function(theta){with(StrSRSWORSampleis,
-                                              pairscore_PL(y,cluster,x,theta))}, x=rb[[1]],method="simple")
+                                              pairscore_PL(y,cluster,x,theta))}, x=rbis[[1]],method="simple")
    
    #Calculate  variance matrix J  for PL (meat for informative sampling design)
    Jis_PL[, , i]=fast_J_PL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
@@ -946,7 +954,7 @@ for(i in 1:LOTS){
    #H_WPL[,,i]=hessian(wpl, rc[[1]])
    
    H_WPL[,,i]=-jacobian(function(theta){with(StrSRSWORSample,
-                                             pairscore_PL(y,cluster,x,theta))}, x=rc[[1]],method="simple")
+                                             pairscore_WPL(y,cluster,x,theta,ID_unit,strata,rep(n2, N1), N2 ))}, x=rc[[1]],method="simple")
    
    #Calculate  variance matrix J  for WPL (meat for uniformative sampling design)
    J_WPL[, , i]=fast_J_PL(y=StrSRSWORSample$y,g=StrSRSWORSample$cluster,
@@ -980,7 +988,7 @@ for(i in 1:LOTS){
    #His_WPL[, , i]=hessian(wplis, rcis[[1]])
    
    His_WPL[,,i]=-jacobian(function(theta){with(StrSRSWORSampleis,
-                                               pairscore_PL(y,cluster,x,theta))}, x=rc[[1]],method="simple")
+                                               pairscore_WPL(y,cluster,x,theta,ID_unit, strata, n2is, N2  ))}, x=rcis[[1]],method="simple")
    
    #Calculate Variance matrix J  for WPL (meat for  informative sampling design)
    Jis_WPL[, , i]=fast_J_WPL(y=StrSRSWORSampleis$y,g=StrSRSWORSampleis$cluster,
